@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.B.E. 2.0 - The Ultimate AI Performer</title>
+    <title>V.I.B.E. 2.0 - Interactive AI Performer</title>
 
     <!-- Three.js Core -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -16,8 +16,47 @@
 
     <!-- Tone.js (For music & melodies) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+    <!-- Speech Recognition (Voice Commands) -->
+    <script src="https://cdn.jsdelivr.net/npm/annyang@2.6.0/annyang.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        #ui-container {
+            position: absolute; top: 20px; left: 20px; z-index: 10;
+            background: rgba(0,0,0,0.5); padding: 15px; border-radius: 5px;
+        }
+        #ui-container input, button {
+            margin: 5px; padding: 10px; font-size: 16px;
+            display: block; width: 100%;
+        }
+        button { cursor: pointer; }
+        #video-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; display: none;
+        }
+    </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
+
+    <!-- User Interface -->
+    <div id="ui-container">
+        <input type="text" id="chatInput" placeholder="Type a message..." />
+        <button id="sendBtn">Send</button>
+        <button id="danceBtn">Dance</button>
+        <button id="singBtn">Sing</button>
+        <button id="freestyleBtn">Freestyle</button>
+        <button id="smileBtn">Smile</button>
+        <button id="neutralBtn">Neutral</button>
+    </div>
+
+    <!-- Video Stream Area -->
+    <div id="video-container">
+        <video id="videoElement" width="100%" height="100%" autoplay loop muted>
+            <source src="your-video-url.mp4" type="video/mp4">
+        </video>
+    </div>
+
     <script>
         /*******************************
          * 1️⃣ SETUP SCENE, CAMERA & RENDERER
@@ -36,7 +75,7 @@
         scene.add(light);
 
         /*******************************
-         * 3️⃣ CAMERA CONTROLS (ROTATE, ZOOM, PAN)
+         * 3️⃣ CAMERA CONTROLS
         ********************************/
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
@@ -59,50 +98,47 @@
             // Enable Animations
             mixer = new THREE.AnimationMixer(model);
             if (gltf.animations.length > 0) {
-                const chillAction = mixer.clipAction(gltf.animations[0]); 
+                const chillAction = mixer.clipAction(gltf.animations[0]);
                 chillAction.play();
             }
 
-            // Get Face for Expressions
+            // Get Face for Expressions (Assuming 'Head' part for facial animations)
             face = model.getObjectByName('Head'); 
 
             animate();
         });
 
         /*******************************
-         * 5️⃣ AI-POWERED CHAT & VOICE
+         * 5️⃣ AI-POWERED CHAT (TEXT-BASED)
         ********************************/
         function speak(text) {
             let msg = new SpeechSynthesisUtterance(text);
-            msg.voice = speechSynthesis.getVoices()[0];
+            let voices = speechSynthesis.getVoices();
+            msg.voice = voices.length > 0 ? voices[0] : null; 
             msg.rate = 1;
-            window.speechSynthesis.speak(msg);
+            speechSynthesis.speak(msg);
         }
 
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.onresult = function(event) {
-            let userText = event.results[0][0].transcript;
-            console.log("User said:", userText);
+        function handleTextInput() {
+            let userText = document.getElementById("chatInput").value.toLowerCase();
+            document.getElementById("chatInput").value = ""; 
 
-            // AI Responses
-            if (userText.toLowerCase().includes("hello vibe")) {
+            if (userText.includes("hello vibe")) {
                 speak("Yo, what's up? You tryna vibe?");
                 setExpression(1); // Smile
-            } else if (userText.toLowerCase().includes("dance")) {
+            } else if (userText.includes("dance")) {
                 playDanceAnimation();
                 speak("Watch me hit this Chris Brown move!");
-            } else if (userText.toLowerCase().includes("sing")) {
+            } else if (userText.includes("sing")) {
                 singMelody();
-            } else if (userText.toLowerCase().includes("freestyle")) {
+            } else if (userText.includes("freestyle")) {
                 rapFreestyle();
             } else {
                 speak("I feel that. Let's keep the energy flowing.");
             }
-        };
-
-        function listen() {
-            recognition.start();
         }
+
+        document.getElementById("sendBtn").addEventListener("click", handleTextInput);
 
         /*******************************
          * 6️⃣ FACIAL EXPRESSIONS
@@ -113,15 +149,23 @@
             }
         }
 
+        document.getElementById("smileBtn").addEventListener("click", () => setExpression(1));
+        document.getElementById("neutralBtn").addEventListener("click", () => setExpression(0));
+
         /*******************************
          * 7️⃣ MUSIC & DANCING
         ********************************/
         function playDanceAnimation() {
             if (mixer) {
-                const danceAction = mixer.clipAction(mixer._actions[1]); 
+                const danceAction = mixer.clipAction(mixer._actions[1]); // Assuming 1 is dance animation
                 danceAction.reset().play();
             }
         }
+
+        document.getElementById("danceBtn").addEventListener("click", () => {
+            playDanceAnimation();
+            speak("Let me hit this dance real quick!");
+        });
 
         /*******************************
          * 8️⃣ AI-GENERATED MELODIES
@@ -142,6 +186,8 @@
             speak("This one’s for you!");
             playNote();
         }
+
+        document.getElementById("singBtn").addEventListener("click", singMelody);
 
         /*******************************
          * 9️⃣ AI-GENERATED FREESTYLE RAP
@@ -168,28 +214,45 @@
             rapLine();
         }
 
-        /*******************************
-         * 🔥 FUTURE UPGRADES SECTION 🔥
-         * ✅ Add AI-Generated Beatboxing
-         * ✅ Let V.I.B.E. Change Outfits
-         * ✅ Multiplayer Dance Battle Mode
-         * ✅ Integrate with Spotify API for Real-Time DJing
-        ********************************/
-
-        // Start Listening for Voice Commands After 3 Seconds
-        setTimeout(() => {
-            speak("Yo, I'm V.I.B.E.! Say 'Hello V.I.B.E.' to start.");
-            listen();
-        }, 3000);
+        document.getElementById("freestyleBtn").addEventListener("click", rapFreestyle);
 
         /*******************************
-         * 10️⃣ ANIMATION LOOP
+         * 🔟 ANIMATION LOOP
         ********************************/
         function animate() {
             requestAnimationFrame(animate);
             if (mixer) mixer.update(0.01);
             controls.update();
             renderer.render(scene, camera);
+        }
+
+        /*******************************
+         * 1️⃣1️⃣ HANDLE VIDEO DISPLAY
+        ********************************/
+        function switchToVideo() {
+            document.getElementById("video-container").style.display = "block"; // Show the video
+        }
+
+        /*******************************
+         * 1️⃣2️⃣ VOICE RECOGNITION USING 'annyang'
+        ********************************/
+        if (annyang) {
+            const commands = {
+                'hello vibe': () => { 
+                    speak("Yo, what's up? You tryna vibe?");
+                    setExpression(1); 
+                },
+                'dance': () => { 
+                    playDanceAnimation();
+                    speak("Watch me hit this Chris Brown move!"); 
+                },
+                'sing': () => singMelody(),
+                'freestyle': () => rapFreestyle(),
+                'switch to video': () => switchToVideo()
+            };
+
+            annyang.addCommands(commands);
+            annyang.start();
         }
     </script>
 </body>

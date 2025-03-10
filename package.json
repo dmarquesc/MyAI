@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@google-cloud/speech": "^6.7.1",
+    "annyang": "^2.6.1",
+    "express": "^4.21.2",
+    "gsap": "^3.12.7",
+    "socket.io": "^4.8.1",
+    "three": "^0.174.0",
+    "tone": "^15.0.4",
+    "vite": "^6.2.1"
+  }
+}
